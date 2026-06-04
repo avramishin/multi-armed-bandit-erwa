@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bandit ERWA Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">NestJS + SQLite + Binance Futures</p>
+        <h1>Non-stationary Multi-Armed Bandit Simulator</h1>
+        <p class="hero-copy">
+          Агент выбирает <strong>IDLE</strong>, <strong>BUY</strong> или <strong>SELL</strong>
+          на последовательности 5-минутных свечей и обновляет Q-оценки через экспоненциальное сглаживание.
+        </p>
+      </header>
+
+      <main class="layout">
+        <section class="panel controls-panel">
+          <div class="panel-header">
+            <h2>Параметры эксперимента</h2>
+            <span id="status-badge" class="status idle">Idle</span>
+          </div>
+
+          <form id="simulation-form" class="controls-grid">
+            <label>
+              <span>Инструмент</span>
+              <select name="symbol">
+                <option value="BTCUSDT">BTCUSDT</option>
+                <option value="ETHUSDT">ETHUSDT</option>
+                <option value="SOLUSDT">SOLUSDT</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Количество свечей</span>
+              <input name="historySize" type="number" min="50" max="3000" step="10" value="240" />
+            </label>
+
+            <label>
+              <span>Депозит, USD</span>
+              <input name="initialDeposit" type="number" min="100" max="100000" step="100" value="5000" />
+            </label>
+
+            <label>
+              <span>Learning rate</span>
+              <input name="learningRate" type="number" min="0.01" max="1" step="0.01" value="0.2" />
+            </label>
+
+            <label>
+              <span>Epsilon</span>
+              <input name="epsilon" type="number" min="0.01" max="0.9" step="0.01" value="0.15" />
+            </label>
+
+            <button type="submit" class="primary-button">Запустить симуляцию</button>
+          </form>
+        </section>
+
+        <section class="panel summary-panel">
+          <div class="panel-header">
+            <h2>Результат</h2>
+            <span id="run-meta" class="muted">Нет данных</span>
+          </div>
+
+          <div id="summary-cards" class="summary-cards"></div>
+
+          <div class="chart-wrap">
+            <canvas id="pnl-chart" width="980" height="360"></canvas>
+            <div id="chart-tooltip" class="chart-tooltip hidden"></div>
+          </div>
+        </section>
+
+        <section class="panel table-panel">
+          <div class="panel-header">
+            <h2>Последние запуски</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Symbol</th>
+                  <th>PNL</th>
+                  <th>Balance</th>
+                  <th>LR</th>
+                  <th>Epsilon</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="runs-table-body">
+                <tr>
+                  <td colspan="7" class="empty-cell">История еще не загружена</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
