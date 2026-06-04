@@ -4,6 +4,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('simulation_runs', (table) => {
     table.increments('id').primary();
     table.string('symbol', 32).notNullable();
+    table.string('candle_interval', 8).notNullable().defaultTo('1h');
     table.integer('history_size').notNullable();
     table.decimal('initial_deposit', 14, 2).notNullable();
     table.decimal('learning_rate', 8, 4).notNullable();

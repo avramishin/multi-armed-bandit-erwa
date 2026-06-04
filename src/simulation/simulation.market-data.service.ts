@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Candle } from "./simulation.types";
+import { Candle, CandleInterval } from "./simulation.types";
 
 interface BinanceKlineResponseItem extends Array<number | string> {
   0: number;
@@ -19,8 +19,12 @@ export class BinanceMarketDataService {
   >();
   private readonly cacheTtlMs = 60_000;
 
-  public async getCandles(symbol: string, limit: number): Promise<Candle[]> {
-    const cacheKey = `${symbol}:${limit}`;
+  public async getCandles(
+    symbol: string,
+    interval: CandleInterval,
+    limit: number,
+  ): Promise<Candle[]> {
+    const cacheKey = `${symbol}:${interval}:${limit}`;
     const cached = this.cache.get(cacheKey);
 
     if (cached && cached.expiresAt > Date.now()) {
@@ -30,7 +34,7 @@ export class BinanceMarketDataService {
     try {
       const url = new URL("https://fapi.binance.com/fapi/v1/klines");
       url.searchParams.set("symbol", symbol);
-      url.searchParams.set("interval", "4h");
+      url.searchParams.set("interval", interval);
       url.searchParams.set("limit", String(limit));
 
       const response = await fetch(url);

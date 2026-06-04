@@ -85,12 +85,12 @@ function renderSummary(summary, id) {
     })
     .join('');
 
-  runMeta.textContent = `${summary.symbol} • ${summary.candlesCount} candles • lr ${summary.learningRate} • eps ${summary.epsilon}`;
+  runMeta.textContent = `${summary.symbol} • ${summary.candleInterval} • ${summary.candlesCount} candles • lr ${summary.learningRate} • eps ${summary.epsilon}`;
 }
 
 function renderRunsTable(runs) {
   if (!runs.length) {
-    runsTableBody.innerHTML = '<tr><td colspan="7" class="empty-cell">История пока пуста</td></tr>';
+    runsTableBody.innerHTML = '<tr><td colspan="8" class="empty-cell">История пока пуста</td></tr>';
     return;
   }
 
@@ -101,6 +101,7 @@ function renderRunsTable(runs) {
         <tr data-run-id="${run.id}">
           <td>#${run.id}</td>
           <td>${run.symbol}</td>
+          <td>${run.candleInterval || '1h'}</td>
           <td class="${pnlClass}">${formatMoney(run.totalPnl)}</td>
           <td>${formatMoney(run.finalBalance)}</td>
           <td>${formatNumber(run.learningRate)}</td>
@@ -110,6 +111,7 @@ function renderRunsTable(runs) {
       `;
     })
     .join('');
+
 }
 
 function drawChart(points) {
@@ -289,6 +291,7 @@ form.addEventListener('submit', async (event) => {
       },
       body: JSON.stringify({
         symbol: payload.symbol,
+        candleInterval: payload.candleInterval,
         historySize: Number(payload.historySize),
         initialDeposit: Number(payload.initialDeposit),
         learningRate: Number(payload.learningRate),

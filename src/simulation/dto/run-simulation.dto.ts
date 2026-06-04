@@ -10,6 +10,9 @@ export class RunSimulationDto {
   @IsIn(['BTCUSDT', 'ETHUSDT', 'SOLUSDT'])
   symbol!: 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';
 
+  @IsIn(['1m', '5m', '15m', '1h', '4h', '1d'])
+  candleInterval!: '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
+
   @Type(() => Number)
   @IsNumber()
   @Min(50)

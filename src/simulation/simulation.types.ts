@@ -1,4 +1,5 @@
 export type Action = 'IDLE' | 'BUY' | 'SELL';
+export type CandleInterval = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
 
 export interface Candle {
   openTime: number;
@@ -24,6 +25,7 @@ export interface SimulationPoint {
 
 export interface SimulationSummary {
   symbol: string;
+  candleInterval: CandleInterval;
   historySize: number;
   candlesCount: number;
   initialDeposit: number;

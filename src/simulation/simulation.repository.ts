@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { SimulationSummary } from './simulation.types';
+import { CandleInterval, SimulationSummary } from './simulation.types';
 
 interface SimulationRunRow {
   id: number;
   symbol: string;
+  candle_interval: CandleInterval | null;
   history_size: number;
   initial_deposit: number;
   learning_rate: number;
@@ -24,6 +25,7 @@ export class SimulationRepository {
   public async create(summary: SimulationSummary): Promise<number> {
     const [id] = await this.databaseService.connection('simulation_runs').insert({
       symbol: summary.symbol,
+      candle_interval: summary.candleInterval,
       history_size: summary.historySize,
       initial_deposit: summary.initialDeposit,
       learning_rate: summary.learningRate,
@@ -47,6 +49,7 @@ export class SimulationRepository {
     return rows.map((row) => ({
       id: row.id,
       symbol: row.symbol,
+      candleInterval: row.candle_interval ?? '1h',
       historySize: row.history_size,
       initialDeposit: Number(row.initial_deposit),
       learningRate: Number(row.learning_rate),
@@ -73,6 +76,7 @@ export class SimulationRepository {
       id: row.id,
       createdAt: row.created_at,
       ...(JSON.parse(row.result_json) as SimulationSummary),
+      candleInterval: row.candle_interval ?? '1h',
     };
   }
 }

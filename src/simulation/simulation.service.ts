@@ -28,6 +28,7 @@ export class SimulationService {
   ): Promise<{ id: number; summary: SimulationSummary }> {
     const candles = await this.marketDataService.getCandles(
       dto.symbol,
+      dto.candleInterval,
       dto.historySize,
     );
 
@@ -136,6 +137,7 @@ export class SimulationService {
 
     return {
       symbol: dto.symbol,
+      candleInterval: dto.candleInterval,
       historySize: dto.historySize,
       candlesCount: candles.length,
       initialDeposit: dto.initialDeposit,
