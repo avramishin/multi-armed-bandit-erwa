@@ -15,8 +15,7 @@
   <body>
     <div class="page-shell">
       <header class="hero">
-        <p class="eyebrow">NestJS / SQLite / Binance Futures</p>
-        <h1>Multi-Armed Bandit Lab <span class="formula">(Q(a) ← (1 − α)Q(a) + αr)</span></h1>
+        <h1>Лаборатория торгового агента <span class="formula">(Q(a) ← (1 − α)Q(a) + αr)</span></h1>
         <p class="hero-copy">
           Q(a) — текущая ценность действия, α — обучаемость, r — reward шага; новая оценка это смесь прошлого знания и нового результата.
         </p>
@@ -31,7 +30,7 @@
 
           <form id="simulation-form" class="controls-grid">
             <label>
-              <span>Инструмент</span>
+              <span class="field-title">Инструмент <span class="info-chip" tabindex="0">i<span class="info-tooltip">Торговый инструмент, по которому загружается история свечей. Влияет на волатильность, форму графика и результат симуляции.</span></span></span>
               <select name="symbol">
                 <option value="BTCUSDT">BTCUSDT</option>
                 <option value="ETHUSDT">ETHUSDT</option>
@@ -40,17 +39,17 @@
             </label>
 
             <label>
-              <span>Комиссия, %</span>
+              <span class="field-title">Комиссия, % <span class="info-chip" tabindex="0">i<span class="info-tooltip">Комиссия на открытие и закрытие позиции. Чем она выше, тем ниже итоговый net PNL и тем сложнее стратегии часто торговать в плюс.</span></span></span>
               <input name="commissionPercent" type="number" min="0" max="100" step="0.001" value="0.045" />
             </label>
 
             <label>
-              <span>Количество свечей</span>
+              <span class="field-title">Количество свечей <span class="info-chip" tabindex="0">i<span class="info-tooltip">Сколько исторических свечей взять в симуляцию. Больше свечей дает длиннее эксперимент и больше сделок.</span></span></span>
               <input name="historySize" type="number" min="50" max="3000" step="10" value="240" />
             </label>
 
             <label>
-              <span>Интервал свечи</span>
+              <span class="field-title">Интервал свечи <span class="info-chip" tabindex="0">i<span class="info-tooltip">Шаг времени одной свечи: от минут до дня. Меняет частоту сделок, характер шума и темп изменения PNL.</span></span></span>
               <select name="candleInterval">
                 <option value="1m">1m</option>
                 <option value="5m">5m</option>
@@ -62,22 +61,22 @@
             </label>
 
             <label>
-              <span>Депозит, USD</span>
+              <span class="field-title">Депозит, USD <span class="info-chip" tabindex="0">i<span class="info-tooltip">Стартовый баланс симуляции. Нужен как базовый капитал, от которого считается итоговый баланс и относительная просадка.</span></span></span>
               <input name="initialDeposit" type="number" min="100" max="100000" step="100" value="5000" />
             </label>
 
             <label>
-              <span>Инвестиции, $</span>
+              <span class="field-title">Инвестиции, $ <span class="info-chip" tabindex="0">i<span class="info-tooltip">Размер одной сделки до применения плеча. Чем он выше, тем сильнее каждое движение цены влияет на PNL и reward.</span></span></span>
               <input name="tradeSizeUsd" type="number" min="1" max="100000" step="1" value="50" />
             </label>
 
             <label>
-              <span>Плечо</span>
+              <span class="field-title">Плечо <span class="info-chip" tabindex="0">i<span class="info-tooltip">Множитель размера позиции. Увеличивает notional, а значит усиливает и прибыль, и убыток от одинакового движения цены.</span></span></span>
               <input name="leverage" type="number" min="1" max="125" step="1" value="10" />
             </label>
 
             <label class="slider-field">
-              <span>Обучаемость</span>
+              <span class="field-title">Обучаемость <span class="info-chip" tabindex="0">i<span class="info-tooltip">Вес нового опыта в формуле обновления Q. Большее значение ускоряет адаптацию, но делает оценки менее стабильными.</span></span></span>
               <div class="slider-meta">
                 <input name="learningRate" type="range" min="0" max="1" step="0.01" value="0.1" />
                 <output for="learningRate" data-output-for="learningRate">0.10</output>
@@ -85,7 +84,7 @@
             </label>
 
             <label class="slider-field">
-              <span>Любопытство</span>
+              <span class="field-title">Любопытство <span class="info-chip" tabindex="0">i<span class="info-tooltip">Вероятность случайно исследовать другое действие вместо текущего лучшего. Большее значение дает больше экспериментов, но меньше дисциплины.</span></span></span>
               <div class="slider-meta">
                 <input name="epsilon" type="range" min="0" max="1" step="0.01" value="0.05" />
                 <output for="epsilon" data-output-for="epsilon">0.05</output>
