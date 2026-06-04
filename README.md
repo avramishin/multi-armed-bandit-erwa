@@ -1,56 +1,148 @@
-# Multi-Armed Bandit ERWA
+# Multi-Armed Bandit Lab
 
-Платформа: `NestJS` | БД: `SQLite + Knex` | UI: статический dashboard из `public/`
+Лаборатория симуляции торгового агента на `NestJS` с `SQLite + Knex` и статическим frontend из `public/`.
 
-Приложение симулирует торгового агента, который на каждой 5-минутной свече выбирает одно из действий:
+Агент использует простую `epsilon-greedy` стратегию выбора действия и обновляет оценку действия по формуле:
 
-- `IDLE`
+```text
+Q(a) <- (1 - alpha) * Q(a) + alpha * reward
+```
+
+Где:
+
+- `Q(a)` — текущая оценка действия
+- `alpha` — обучаемость (`learningRate`)
+- `reward` — нормализованный результат шага
+
+## Что сейчас реализовано
+
+- HTTP-приложение на NestJS
+- SQLite-хранилище истории запусков
+- Автомиграции при старте приложения
+- Статический dashboard без сборщика
+- Запуск симуляции через API и через UI
+- История последних запусков
+- График cumulative PNL
+- Tooltip по точкам графика
+- Линия базового депозита на графике
+- Подсветка выходных дней `UTC` и недельные разделители на графике
+- In-memory cache свечей по ключу `symbol + interval + limit`
+- Загрузка исторических свечей с Binance Futures public REST API
+
+## Текущее поведение симуляции
+
+На каждом шаге агент выбирает действие из текущего набора:
+
 - `BUY`
 - `SELL`
 
-Алгоритм обучения: `Non-stationary Multi-Armed Bandit with Exponential Recency-Weighted Average`.
-
-## Что реализовано
-
-- HTTP-приложение на NestJS
-- Раздача статического frontend без сборщика
-- API для запуска симуляции
-- SQLite-хранилище истории запусков
-- График изменения cumulative PNL
-- Загрузка 5m свечей с Binance Futures public API
-- Offline fallback на синтетические свечи, если внешняя сеть недоступна
-
-## Правила симуляции
-
-1. На вход берется последовательность 5-минутных свечей OHLC.
-2. На каждом шаге агент выбирает `IDLE`, `BUY` или `SELL`.
-3. Каждая сделка открывается на `$50` с плечом `5x`.
-4. Комиссия на открытие и закрытие: `0.02%`.
-5. Позиция не накапливается: на следующем шаге предыдущая закрывается.
-6. `learningRate` и `epsilon` настраиваются через UI/API.
-7. Баланс симуляции ведется в рамках стартового депозита.
-
-## Алгоритм
-
-Агент хранит простую таблицу ценностей действий:
+Важно: тип `Action` в коде все еще допускает `IDLE`, и UI/график умеют его показывать, но в текущей реализации симулятора массив действий задан как:
 
 ```ts
-type Action = 'IDLE' | 'BUY' | 'SELL';
-Record<Action, number>
+const ACTIONS: Action[] = ["BUY", "SELL"];
 ```
 
-Выбор действия:
+То есть фактически агент сейчас работает без `IDLE`.
 
-- с вероятностью `epsilon` агент исследует среду и берет случайное действие;
-- иначе выбирает действие с максимальным `Q`.
+Логика шага:
 
-Обновление после reward:
+1. Если есть открытая позиция, она закрывается по цене текущей свечи.
+2. PNL считается с учетом направления позиции, размера позиции и комиссии закрытия.
+3. Reward считается от `netPnl` и нормализуется через `tanh(netPnl / tradeSizeUsd)`.
+4. Агент обновляет оценку того действия, которое открыло только что закрытую позицию.
+5. Затем агент выбирает новое действие и открывает новую позицию.
 
-```ts
-Q[action] = (1 - learningRate) * Q[action] + learningRate * reward
+Позиция не накапливается: одновременно существует только одна открытая позиция.
+
+## Формула PNL
+
+Размер позиции:
+
+```text
+notionalUsd = tradeSizeUsd * leverage
+quantity = notionalUsd / entryPrice
 ```
 
-Reward нормализуется через `tanh`, чтобы не раздувать влияние отдельных шагов.
+Gross PNL:
+
+```text
+BUY:  (exitPrice - entryPrice) * quantity
+SELL: (entryPrice - exitPrice) * quantity
+```
+
+Net PNL:
+
+```text
+netPnl = grossPnl - fees
+```
+
+Комиссия в UI задается в процентах, например:
+
+- `0.045` означает `0.045%`
+- внутри расчета это переводится в rate через `commissionPercent / 100`
+
+## Параметры симуляции
+
+Через UI/API сейчас доступны:
+
+- `symbol`: `BTCUSDT`, `ETHUSDT`, `SOLUSDT`
+- `candleInterval`: `1m`, `5m`, `15m`, `1h`, `4h`, `1d`
+- `historySize`
+- `initialDeposit`
+- `tradeSizeUsd`
+- `leverage`
+- `commissionPercent`
+- `learningRate`
+- `epsilon`
+
+Текущие дефолты UI:
+
+- `commissionPercent = 0.045`
+- `tradeSizeUsd = 50`
+- `leverage = 10`
+- `learningRate = 0.10`
+- `epsilon = 0.05`
+
+## UI
+
+Dashboard сейчас умеет:
+
+- запускать симуляцию
+- менять параметры сделки и обучения
+- отображать итоговый баланс, PNL, комиссию, инвестиции и плечо
+- показывать линию PNL по шагам
+- показывать действие агента на каждом шаге цветом
+- показывать tooltip со свечой, временем, reward, step PNL и cumulative PNL
+- подсвечивать выходные `UTC`
+- открывать сохраненные прошлые запуски
+
+## API
+
+### `POST /api/simulation/run`
+
+Пример тела запроса:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "candleInterval": "1h",
+  "historySize": 240,
+  "initialDeposit": 5000,
+  "tradeSizeUsd": 50,
+  "leverage": 10,
+  "commissionPercent": 0.045,
+  "learningRate": 0.1,
+  "epsilon": 0.05
+}
+```
+
+### `GET /api/simulation/runs`
+
+Возвращает последние сохраненные запуски.
+
+### `GET /api/simulation/runs/:id`
+
+Возвращает сохраненный запуск целиком, включая точки графика.
 
 ## Запуск
 
@@ -78,66 +170,36 @@ npm run build
 npm start
 ```
 
-По умолчанию сервер поднимается на `127.0.0.1:3000`.
+По умолчанию:
 
-Можно переопределить:
+- `HOST=127.0.0.1`
+- `PORT=3000`
+
+Пример переопределения:
 
 ```bash
 HOST=0.0.0.0 PORT=4000 npm run start:dev
 ```
 
-## UI
-
-Dashboard позволяет:
-
-- выбрать инструмент: `BTCUSDT`, `ETHUSDT`, `SOLUSDT`
-- выбрать количество свечей
-- выбрать стартовый депозит
-- выбрать `learningRate`
-- выбрать `epsilon`
-- запустить симуляцию
-- посмотреть итоговый PNL, баланс и график
-- открыть один из последних сохраненных запусков
-
-## API
-
-Запуск симуляции:
-
-```http
-POST /api/simulation/run
-Content-Type: application/json
-```
-
-Пример тела:
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "historySize": 240,
-  "initialDeposit": 5000,
-  "learningRate": 0.2,
-  "epsilon": 0.15
-}
-```
-
-Получить последние запуски:
-
-```http
-GET /api/simulation/runs
-```
-
-Получить конкретный запуск:
-
-```http
-GET /api/simulation/runs/:id
-```
-
-## Структура
+## Структура проекта
 
 ```text
 src/
+  app.module.ts
+  main.ts
   database/
+    database.module.ts
+    database.service.ts
+    migrations/
   simulation/
+    dto/
+    non-stationary-agent.ts
+    simulation.controller.ts
+    simulation.market-data.service.ts
+    simulation.module.ts
+    simulation.repository.ts
+    simulation.service.ts
+    simulation.types.ts
 public/
   index.html
   styles.css
@@ -146,6 +208,7 @@ public/
 
 ## Замечания
 
-- Сейчас интеграция с Binance использует public REST klines endpoint.
-- WebSocket market data из исходной идеи README пока не реализован.
-- В средах без доступа к сети приложение не падает и переключается на синтетические свечи.
+- Источник свечей сейчас только Binance Futures REST klines endpoint.
+- WebSocket market data пока не реализован.
+- Cache свечей — in-memory, без persistence между рестартами процесса.
+- Текущий `README` описывает фактическое состояние кода, а не исходную идею проекта.
