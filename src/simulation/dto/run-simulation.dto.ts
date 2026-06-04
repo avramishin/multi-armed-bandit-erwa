@@ -27,13 +27,31 @@ export class RunSimulationDto {
 
   @Type(() => Number)
   @IsNumber()
-  @Min(0.01)
+  @Min(1)
+  @Max(100000)
+  tradeSizeUsd!: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(125)
+  leverage!: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  commissionPercent!: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
   @Max(1)
   learningRate!: number;
 
   @Type(() => Number)
   @IsNumber()
-  @Min(0.01)
-  @Max(0.9)
+  @Min(0)
+  @Max(1)
   epsilon!: number;
 }

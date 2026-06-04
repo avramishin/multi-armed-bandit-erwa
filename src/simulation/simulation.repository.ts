@@ -72,11 +72,16 @@ export class SimulationRepository {
       return null;
     }
 
+    const parsed = JSON.parse(row.result_json) as Partial<SimulationSummary>;
+
     return {
       id: row.id,
       createdAt: row.created_at,
-      ...(JSON.parse(row.result_json) as SimulationSummary),
+      ...(parsed as SimulationSummary),
       candleInterval: row.candle_interval ?? '1h',
+      tradeSizeUsd: parsed.tradeSizeUsd ?? 50,
+      leverage: parsed.leverage ?? 10,
+      commissionPercent: parsed.commissionPercent ?? 0,
     };
   }
 }

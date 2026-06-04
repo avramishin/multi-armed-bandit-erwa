@@ -69,6 +69,9 @@ function renderSummary(summary, id) {
     ['Final Balance', formatMoney(summary.finalBalance)],
     ['Total PNL', formatMoney(summary.totalPnl)],
     ['Fees', formatMoney(summary.totalFees)],
+    ['Инвестиции', formatMoney(summary.tradeSizeUsd)],
+    ['Плечо', `${formatNumber(summary.leverage)}x`],
+    ['Комиссия', `${formatNumber(summary.commissionPercent)}%`],
   ];
 
   summaryCards.innerHTML = cards
@@ -85,7 +88,7 @@ function renderSummary(summary, id) {
     })
     .join('');
 
-  runMeta.textContent = `${summary.symbol} • ${summary.candleInterval} • ${summary.candlesCount} candles • lr ${summary.learningRate} • eps ${summary.epsilon}`;
+  runMeta.textContent = `${summary.symbol} • ${summary.candleInterval} • ${summary.candlesCount} candles • ${formatMoney(summary.tradeSizeUsd)} • ${formatNumber(summary.leverage)}x • fee ${formatNumber(summary.commissionPercent)}% • learn ${summary.learningRate.toFixed(2)} • curiosity ${summary.epsilon.toFixed(2)}`;
 }
 
 function renderRunsTable(runs) {
@@ -211,6 +214,17 @@ function drawChart(points) {
   });
 }
 
+function syncSliderOutputs() {
+  document.querySelectorAll('[data-output-for]').forEach((output) => {
+    const input = form.elements.namedItem(output.dataset.outputFor);
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+
+    output.textContent = Number(input.value).toFixed(2);
+  });
+}
+
 function findClosestPoint(clientX) {
   if (!currentChartPoints.length) {
     return null;
@@ -294,6 +308,9 @@ form.addEventListener('submit', async (event) => {
         candleInterval: payload.candleInterval,
         historySize: Number(payload.historySize),
         initialDeposit: Number(payload.initialDeposit),
+        tradeSizeUsd: Number(payload.tradeSizeUsd),
+        leverage: Number(payload.leverage),
+        commissionPercent: Number(payload.commissionPercent),
         learningRate: Number(payload.learningRate),
         epsilon: Number(payload.epsilon),
       }),
@@ -331,7 +348,14 @@ runsTableBody.addEventListener('click', async (event) => {
   }
 });
 
+form.addEventListener('input', (event) => {
+  if (event.target instanceof HTMLInputElement && event.target.type === 'range') {
+    syncSliderOutputs();
+  }
+});
+
 setStatus('idle', 'Idle');
+syncSliderOutputs();
 drawChart([]);
 loadRuns().catch((error) => {
   setStatus('error', 'Error');

@@ -121,16 +121,17 @@ body {
 
 .controls-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .controls-grid label {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .controls-grid span {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -148,16 +149,47 @@ select {
   width: 100%;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.76);
-  border-radius: 18px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 10px 12px;
   color: var(--text);
+  font-size: 14px;
+}
+
+input[type="range"] {
+  padding: 0;
+  accent-color: #5b3b18;
+  background: transparent;
+}
+
+.slider-field {
+  grid-column: 1 / -1;
+}
+
+.slider-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-meta output {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .primary-button {
-  margin-top: 6px;
+  grid-column: 1 / -1;
+  margin-top: 2px;
   border: 0;
-  border-radius: 22px;
-  padding: 16px 20px;
+  border-radius: 16px;
+  padding: 12px 16px;
   color: #fff8ec;
   font-weight: 800;
   background: linear-gradient(135deg, #22211e, #5b3b18);
@@ -337,5 +369,14 @@ th {
 
   .summary-cards {
     grid-template-columns: 1fr;
+  }
+
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .slider-field,
+  .primary-button {
+    grid-column: auto;
   }
 }

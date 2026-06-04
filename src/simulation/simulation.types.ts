@@ -29,6 +29,9 @@ export interface SimulationSummary {
   historySize: number;
   candlesCount: number;
   initialDeposit: number;
+  tradeSizeUsd: number;
+  leverage: number;
+  commissionPercent: number;
   finalBalance: number;
   totalPnl: number;
   totalFees: number;
