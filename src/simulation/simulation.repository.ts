@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { CandleInterval, SimulationSummary } from './simulation.types';
+import { Injectable } from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
+import { CandleInterval, SimulationSummary } from "./simulation.types";
 
 interface SimulationRunRow {
   id: number;
@@ -23,33 +23,36 @@ export class SimulationRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   public async create(summary: SimulationSummary): Promise<number> {
-    const [id] = await this.databaseService.connection('simulation_runs').insert({
-      symbol: summary.symbol,
-      candle_interval: summary.candleInterval,
-      history_size: summary.historySize,
-      initial_deposit: summary.initialDeposit,
-      learning_rate: summary.learningRate,
-      epsilon: summary.epsilon,
-      candles_count: summary.candlesCount,
-      final_balance: summary.finalBalance,
-      total_pnl: summary.totalPnl,
-      total_fees: summary.totalFees,
-      result_json: JSON.stringify(summary),
-    });
+    const [id] = await this.databaseService
+      .connection("simulation_runs")
+      .insert({
+        symbol: summary.symbol,
+        candle_interval: summary.candleInterval,
+        history_size: summary.historySize,
+        initial_deposit: summary.initialDeposit,
+        learning_rate: summary.learningRate,
+        epsilon: summary.epsilon,
+        candles_count: summary.candlesCount,
+        final_balance: summary.finalBalance,
+        total_pnl: summary.totalPnl,
+        total_fees: summary.totalFees,
+        result_json: JSON.stringify(summary),
+      });
 
     return Number(id);
   }
 
   public async listRecent(limit = 10): Promise<Array<Record<string, unknown>>> {
-    const rows = await this.databaseService.connection<SimulationRunRow>('simulation_runs')
-      .select('*')
-      .orderBy('created_at', 'desc')
+    const rows = await this.databaseService
+      .connection<SimulationRunRow>("simulation_runs")
+      .select("*")
+      .orderBy("created_at", "desc")
       .limit(limit);
 
     return rows.map((row) => ({
       id: row.id,
       symbol: row.symbol,
-      candleInterval: row.candle_interval ?? '1h',
+      candleInterval: row.candle_interval ?? "1h",
       historySize: row.history_size,
       initialDeposit: Number(row.initial_deposit),
       learningRate: Number(row.learning_rate),
@@ -62,9 +65,12 @@ export class SimulationRepository {
     }));
   }
 
-  public async getById(id: number): Promise<(SimulationSummary & { id: number; createdAt: string }) | null> {
-    const row = await this.databaseService.connection<SimulationRunRow>('simulation_runs')
-      .select('*')
+  public async getById(
+    id: number,
+  ): Promise<(SimulationSummary & { id: number; createdAt: string }) | null> {
+    const row = await this.databaseService
+      .connection<SimulationRunRow>("simulation_runs")
+      .select("*")
       .where({ id })
       .first();
 
@@ -78,7 +84,7 @@ export class SimulationRepository {
       id: row.id,
       createdAt: row.created_at,
       ...(parsed as SimulationSummary),
-      candleInterval: row.candle_interval ?? '1h',
+      candleInterval: row.candle_interval ?? "1h",
       tradeSizeUsd: parsed.tradeSizeUsd ?? 50,
       leverage: parsed.leverage ?? 10,
       commissionPercent: parsed.commissionPercent ?? 0,

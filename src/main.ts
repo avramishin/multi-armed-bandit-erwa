@@ -1,10 +1,12 @@
-import 'reflect-metadata';
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import "reflect-metadata";
+import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: console,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -14,10 +16,10 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix("api");
 
   const port = Number(process.env.PORT ?? 3000);
-  const host = process.env.HOST ?? '127.0.0.1';
+  const host = process.env.HOST ?? "127.0.0.1";
 
   await app.listen(port, host);
 }

@@ -1,5 +1,5 @@
-export type Action = 'IDLE' | 'BUY' | 'SELL';
-export type CandleInterval = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
+export type Action = "IDLE" | "BUY" | "SELL";
+export type CandleInterval = "1m" | "5m" | "15m" | "1h" | "4h" | "1d";
 
 export interface Candle {
   openTime: number;
@@ -41,7 +41,7 @@ export interface SimulationSummary {
 }
 
 export interface PositionState {
-  action: Extract<Action, 'BUY' | 'SELL'>;
+  action: Extract<Action, "BUY" | "SELL">;
   entryPrice: number;
   notionalUsd: number;
   quantity: number;
