@@ -4,13 +4,14 @@
   "private": true,
   "description": "NestJS simulation platform for a non-stationary multi-armed bandit trading bot",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/src/main.js",
+    "start": "nest start",
+    "build": "nest build",
     "start:dev": "ts-node src/main.ts",
     "db:migrate": "knex --knexfile knexfile.ts migrate:latest",
     "db:rollback": "knex --knexfile knexfile.ts migrate:rollback"
   },
   "dependencies": {
+    "@nestjs/cli": "^11.0.21",
     "@nestjs/common": "^11.1.8",
     "@nestjs/core": "^11.1.8",
     "@nestjs/platform-express": "^11.1.8",
