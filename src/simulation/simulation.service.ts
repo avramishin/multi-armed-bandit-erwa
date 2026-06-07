@@ -140,7 +140,10 @@ export class SimulationService {
       totalFees += finalResult.fees;
       balance += finalResult.netPnl;
       cumulativePnl += finalResult.netPnl;
-      agent.learn(previousAction, this.normalizeReward(finalResult.netPnl, dto.tradeSizeUsd));
+      agent.learn(
+        previousAction,
+        this.normalizeReward(finalResult.netPnl, dto.tradeSizeUsd),
+      );
 
       const lastPoint = points[points.length - 1];
       if (lastPoint) {
@@ -217,12 +220,6 @@ export class SimulationService {
     );
     const netPnl = grossPnl + closingFee;
 
-    console.log({
-      grossPnl,
-      netPnl,
-      fees: closingFee,
-    });
-
     return {
       grossPnl,
       netPnl,
@@ -244,9 +241,13 @@ export class SimulationService {
     const notionalUsd = tradeSizeUsd * leverage;
     const quantity = notionalUsd / entryPrice;
     const potentialGrossPnl = Math.abs(exitPrice - entryPrice) * quantity;
-    const roundTripFees = 2 * notionalUsd * this.getCommissionRate(commissionPercent);
+    const roundTripFees =
+      2 * notionalUsd * this.getCommissionRate(commissionPercent);
 
-    return this.normalizeReward(roundTripFees - potentialGrossPnl, tradeSizeUsd);
+    return this.normalizeReward(
+      roundTripFees - potentialGrossPnl,
+      tradeSizeUsd,
+    );
   }
 
   private getCommissionRate(commissionPercent: number): number {

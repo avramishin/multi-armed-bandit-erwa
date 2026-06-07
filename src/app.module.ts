@@ -8,7 +8,7 @@ import { SimulationModule } from './simulation/simulation.module';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: path.join(process.cwd(), 'public'),
-      exclude: ['/api*'],
+      exclude: ['/api/{*path}'],
     }),
     DatabaseModule,
     SimulationModule,
