@@ -11,7 +11,7 @@ import {
 import { BinanceMarketDataService } from "./simulation.market-data.service";
 import { SimulationRepository } from "./simulation.repository";
 
-const ACTIONS: Action[] = ["BUY", "SELL"];
+const ACTIONS: Action[] = ["IDLE", "BUY", "SELL"];
 @Injectable()
 export class SimulationService {
   constructor(
@@ -58,12 +58,15 @@ export class SimulationService {
     let totalFees = 0;
     let cumulativePnl = 0;
     let currentPosition: PositionState | null = null;
+    let previousAction: Action | null = null;
+    let previousEntryPrice: number | null = null;
 
     const points: SimulationPoint[] = [];
 
     for (const [index, candle] of candles.entries()) {
       const action = agent.chooseAction();
-      const actionToLearn = currentPosition?.action ?? null;
+      const actionToLearn = previousAction;
+      const entryPriceToLearn = previousEntryPrice;
       const closingResult = this.closePositionIfNeeded(
         currentPosition,
         candle.close,
@@ -91,14 +94,22 @@ export class SimulationService {
         balance += nextPosition.openingFee;
       }
 
-      const reward = this.normalizeReward(
-        closingResult.netPnl,
-        dto.tradeSizeUsd,
-      );
-      if (
+      let reward = 0;
+      if (actionToLearn === "IDLE" && entryPriceToLearn !== null) {
+        reward = this.getIdleReward(
+          entryPriceToLearn,
+          candle.close,
+          dto.tradeSizeUsd,
+          dto.leverage,
+          dto.commissionPercent,
+        );
+        agent.learn("IDLE", reward);
+      } else if (
         actionToLearn &&
+        actionToLearn !== "IDLE" &&
         (closingResult.netPnl !== 0 || closingResult.fees !== 0)
       ) {
+        reward = this.normalizeReward(closingResult.netPnl, dto.tradeSizeUsd);
         agent.learn(actionToLearn, reward);
       }
 
@@ -113,10 +124,12 @@ export class SimulationService {
         balance,
         qValues: agent.getMemorySnapshot(),
       });
+
+      previousAction = action;
+      previousEntryPrice = candle.close;
     }
 
-    if (currentPosition) {
-      const finalAction = currentPosition.action;
+    if (currentPosition && previousAction && previousAction !== "IDLE") {
       const finalCandle = candles[candles.length - 1];
       const finalResult = this.closePositionIfNeeded(
         currentPosition,
@@ -127,10 +140,7 @@ export class SimulationService {
       totalFees += finalResult.fees;
       balance += finalResult.netPnl;
       cumulativePnl += finalResult.netPnl;
-      agent.learn(
-        finalAction,
-        this.normalizeReward(finalResult.netPnl, dto.tradeSizeUsd),
-      );
+      agent.learn(previousAction, this.normalizeReward(finalResult.netPnl, dto.tradeSizeUsd));
 
       const lastPoint = points[points.length - 1];
       if (lastPoint) {
@@ -170,7 +180,9 @@ export class SimulationService {
   } {
     const notionalUsd = tradeSizeUsd * leverage;
     const quantity = notionalUsd / entryPrice;
-    const openingFee = -(notionalUsd * this.getCommissionRate(commissionPercent));
+    const openingFee = -(
+      notionalUsd * this.getCommissionRate(commissionPercent)
+    );
 
     return {
       position: {
@@ -200,8 +212,16 @@ export class SimulationService {
 
     const grossPnl =
       (exitPrice - position.entryPrice) * position.quantity * direction;
-    const closingFee = -(position.notionalUsd * this.getCommissionRate(commissionPercent));
+    const closingFee = -(
+      position.notionalUsd * this.getCommissionRate(commissionPercent)
+    );
     const netPnl = grossPnl + closingFee;
+
+    console.log({
+      grossPnl,
+      netPnl,
+      fees: closingFee,
+    });
 
     return {
       grossPnl,
@@ -212,6 +232,21 @@ export class SimulationService {
 
   private normalizeReward(value: number, tradeSizeUsd: number): number {
     return Math.tanh(value / Math.max(tradeSizeUsd, 1));
+  }
+
+  private getIdleReward(
+    entryPrice: number,
+    exitPrice: number,
+    tradeSizeUsd: number,
+    leverage: number,
+    commissionPercent: number,
+  ): number {
+    const notionalUsd = tradeSizeUsd * leverage;
+    const quantity = notionalUsd / entryPrice;
+    const potentialGrossPnl = Math.abs(exitPrice - entryPrice) * quantity;
+    const roundTripFees = 2 * notionalUsd * this.getCommissionRate(commissionPercent);
+
+    return this.normalizeReward(roundTripFees - potentialGrossPnl, tradeSizeUsd);
   }
 
   private getCommissionRate(commissionPercent: number): number {
